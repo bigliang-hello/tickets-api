@@ -22,9 +22,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!body) return NextResponse.json({ error: 'missing body' }, { status: 400 })
   const { id } = await params
   const supabase = getSupabase()
-  const { data, error } = await (supabase as unknown as { from: (t: string) => { update: (v: Record<string, unknown>) => { eq: (...args: unknown[]) => { select: (...args: unknown[]) => { limit: (...args: unknown[]) => Promise<{ data: unknown; error: unknown }> } } } } })
+  const { data, error } = await supabase
     .from('tickets')
-    .update({ ...body } as Record<string, unknown>)
+    .update({ ...body })
     .eq('id', id)
     .eq('user_id', userId)
     .select('*')

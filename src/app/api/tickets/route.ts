@@ -32,11 +32,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: 'invalid fields', detail: parsed.error.flatten() }, { status: 400 })
   const payload = { ...parsed.data, user_id: userId }
   const supabase = getSupabase()
-  const { data, error } = await (supabase as unknown as { from: (t: string) => { insert: (v: Record<string, unknown>) => { select: (...args: unknown[]) => { limit: (...args: unknown[]) => Promise<{ data: unknown; error: unknown }> } } } })
-    .from('tickets')
-    .insert(payload as Record<string, unknown>)
-    .select('*')
-    .limit(1)
+  const { data, error } = await supabase.from('tickets').insert(payload).select('*').limit(1)
   if (error) return NextResponse.json({ error: 'db error', detail: error.message }, { status: 500 })
   return NextResponse.json(data?.[0] ?? null)
 }

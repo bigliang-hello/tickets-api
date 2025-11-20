@@ -20,7 +20,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ trai
     .eq('depart_date', date)
     .limit(1)
   if (error) return NextResponse.json({ error: 'db error', detail: error.message }, { status: 500 })
-  const rows: Array<{ route_json?: unknown }> = (cached as Array<{ route_json?: unknown }> | null) ?? []
+  const rows: Array<{ route_json?: unknown }> = cached ?? []
   if (rows?.[0]?.route_json) return NextResponse.json({ train_code: trainCode, date, route: rows[0].route_json })
 
   return NextResponse.json({ error: 'not_cached', message: '该车次当日经停站尚未缓存' }, { status: 404 })

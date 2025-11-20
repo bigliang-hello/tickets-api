@@ -26,19 +26,19 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabase()
     const { data: users } = await supabase.from('users_wechat').select('id, openid').eq('openid', openid).limit(1)
-    let userId = (users as Array<{ id: string }> | null)?.[0]?.id
+    let userId = users?.[0]?.id as string | undefined
     if (!userId) {
       const { data: inserted, error } = await supabase
         .from('users_wechat')
-        .insert({ openid, unionid, nickname: body.nickname ?? null, avatar_url: body.avatar_url ?? null } as never)
+        .insert({ openid, unionid, nickname: body.nickname ?? null, avatar_url: body.avatar_url ?? null })
         .select('id')
         .limit(1)
       if (error) return NextResponse.json({ error: 'db insert error', detail: error.message }, { status: 500 })
-      userId = (inserted as Array<{ id: string }> | null)?.[0]?.id
+      userId = inserted?.[0]?.id as string | undefined
     } else {
-      await (supabase as unknown as { from: (t: string) => { update: (v: Record<string, unknown>) => { eq: (...args: unknown[]) => unknown } } })
+      await supabase
         .from('users_wechat')
-        .update({ last_login_at: new Date().toISOString(), nickname: body.nickname ?? null, avatar_url: body.avatar_url ?? null } as Record<string, unknown>)
+        .update({ last_login_at: new Date().toISOString(), nickname: body.nickname ?? null, avatar_url: body.avatar_url ?? null })
         .eq('id', userId)
     }
 
