@@ -4,6 +4,10 @@ export function requiredEnv(name: string): string {
   return val;
 }
 
+export function optionalEnv(name: string): string | undefined {
+  return process.env[name];
+}
+
 export const ENV = {
   SUPABASE_URL: () => requiredEnv('SUPABASE_URL'),
   SUPABASE_SERVICE_ROLE_KEY: () => requiredEnv('SUPABASE_SERVICE_ROLE_KEY'),

@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
-import { getAuthUserId } from '@/lib/auth'
+import { getAuthUserIdWithBypass } from '@/lib/auth'
 
 export const runtime = 'nodejs'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ trainCode: string }> }) {
-  const userId = getAuthUserId(req)
+  const userId = getAuthUserIdWithBypass(req)
   if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   const url = new URL(req.url)
   const date = url.searchParams.get('date')

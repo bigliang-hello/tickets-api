@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import { ENV } from './env'
+import { ENV, optionalEnv } from './env'
 
 export interface JwtPayload {
   sub: string
@@ -24,4 +24,14 @@ export function getAuthUserId(req: Request): string | null {
   if (!m) return null
   const payload = verifyJwt(m[1])
   return payload?.sub || null
+}
+
+export function getAuthUserIdWithBypass(req: Request): string | null {
+  const bypass = optionalEnv('DEV_BYPASS_AUTH')
+  const isDev = process.env.NODE_ENV !== 'production'
+  if (isDev && bypass && /^(1|true)$/i.test(bypass)) {
+    const id = req.headers.get('x-dev-user-id') || optionalEnv('DEV_USER_ID') || null
+    if (id) return id
+  }
+  return getAuthUserId(req)
 }

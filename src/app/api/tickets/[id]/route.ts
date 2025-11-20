@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
-import { getAuthUserId } from '@/lib/auth'
+import { getAuthUserIdWithBypass } from '@/lib/auth'
 
 export const runtime = 'nodejs'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = getAuthUserId(req)
+  const userId = getAuthUserIdWithBypass(req)
   if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   const { id } = await params
   const supabase = getSupabase()
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = getAuthUserId(req)
+  const userId = getAuthUserIdWithBypass(req)
   if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   const body = await req.json().catch(() => null)
   if (!body) return NextResponse.json({ error: 'missing body' }, { status: 400 })
@@ -35,7 +35,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = getAuthUserId(req)
+  const userId = getAuthUserIdWithBypass(req)
   if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   const { id } = await params
   const supabase = getSupabase()
