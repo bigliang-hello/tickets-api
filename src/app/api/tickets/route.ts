@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { NextResponse, NextRequest } from 'next/server'
+import { getSupabase } from '@/lib/supabase'
 import { getAuthUserId } from '@/lib/auth'
 import { TicketCreateSchema } from '@/lib/validation'
 
 export const runtime = 'nodejs'
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const userId = getAuthUserId(req)
   if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   const url = new URL(req.url)
@@ -13,6 +13,7 @@ export async function GET(req: Request) {
   const page = Math.max(Number(url.searchParams.get('page') || 1), 1)
   const from = (page - 1) * limit
   const to = from + limit - 1
+  const supabase = getSupabase()
   const { data, error, count } = await supabase
     .from('tickets')
     .select('*', { count: 'exact' })
@@ -23,14 +24,19 @@ export async function GET(req: Request) {
   return NextResponse.json({ items: data, page, limit, total: count ?? null })
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const userId = getAuthUserId(req)
   if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   const body = await req.json().catch(() => null)
   const parsed = TicketCreateSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: 'invalid fields', detail: parsed.error.flatten() }, { status: 400 })
   const payload = { ...parsed.data, user_id: userId }
-  const { data, error } = await supabase.from('tickets').insert(payload).select('*').limit(1)
+  const supabase = getSupabase()
+  const { data, error } = await (supabase as unknown as { from: (t: string) => { insert: (v: Record<string, unknown>) => { select: (...args: unknown[]) => { limit: (...args: unknown[]) => Promise<{ data: unknown; error: unknown }> } } } })
+    .from('tickets')
+    .insert(payload as Record<string, unknown>)
+    .select('*')
+    .limit(1)
   if (error) return NextResponse.json({ error: 'db error', detail: error.message }, { status: 500 })
   return NextResponse.json(data?.[0] ?? null)
 }

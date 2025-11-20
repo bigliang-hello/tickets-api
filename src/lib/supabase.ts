@@ -1,6 +1,14 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { ENV } from './env'
+import type { Database } from './db.types'
 
-export const supabase = createClient(ENV.SUPABASE_URL(), ENV.SUPABASE_SERVICE_ROLE_KEY(), {
-  auth: { persistSession: false },
-})
+let client: SupabaseClient<Database> | null = null
+
+export function getSupabase() {
+  if (!client) {
+    client = createClient<Database>(ENV.SUPABASE_URL(), ENV.SUPABASE_SERVICE_ROLE_KEY(), {
+      auth: { persistSession: false },
+    })
+  }
+  return client
+}

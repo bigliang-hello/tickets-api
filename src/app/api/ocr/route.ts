@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { getAuthUserId } from '@/lib/auth'
 import { ENV } from '@/lib/env'
 
@@ -60,7 +60,7 @@ function parseText(text: string) {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const userId = getAuthUserId(req)
   if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 

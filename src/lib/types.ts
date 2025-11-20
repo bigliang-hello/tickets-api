@@ -15,7 +15,7 @@ export interface Ticket {
   price?: number
   source_type: TicketSource
   raw_sms?: string
-  raw_ocr_json?: any
+  raw_ocr_json?: unknown
   created_at?: string
   updated_at?: string
 }

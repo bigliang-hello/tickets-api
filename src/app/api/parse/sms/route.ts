@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import type { ParsedFields } from '@/lib/types'
 
 export const runtime = 'nodejs'
@@ -54,7 +54,7 @@ function pickGate(text: string): string | undefined {
   return m?.[1]
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null) as { text?: string }
   if (!body?.text) return NextResponse.json({ error: 'missing text' }, { status: 400 })
   const text = body.text

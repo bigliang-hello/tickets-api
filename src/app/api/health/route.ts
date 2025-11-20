@@ -1,9 +1,8 @@
-import { NextResponse } from 'next/server'
-import { ENV } from '@/lib/env'
+import { NextResponse, NextRequest } from 'next/server'
 
 export const runtime = 'nodejs'
 
-export async function GET() {
+export async function GET(_req: NextRequest) {
   const envs = ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','APP_JWT_SECRET','WECHAT_APPID','WECHAT_SECRET','BAIDU_OCR_API_KEY','BAIDU_OCR_SECRET_KEY']
   const missing = envs.filter(k => !process.env[k])
   return NextResponse.json({
