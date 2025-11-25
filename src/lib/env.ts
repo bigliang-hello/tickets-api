@@ -16,4 +16,5 @@ export const ENV = {
   WECHAT_SECRET: () => requiredEnv('WECHAT_SECRET'),
   BAIDU_OCR_API_KEY: () => requiredEnv('BAIDU_OCR_API_KEY'),
   BAIDU_OCR_SECRET_KEY: () => requiredEnv('BAIDU_OCR_SECRET_KEY'),
+  REMINDER_TMPL_ID: () => requiredEnv('REMINDER_TMPL_ID'),
 };
