@@ -103,10 +103,12 @@ export async function POST(req: NextRequest) {
     } catch {}
     return s
   }
-  const text = (json.words_result as Array<{ words: string }>).map(x => fix(x.words)).join('\n')
+  const wordsFixed = Array.isArray(json.words_result) ? (json.words_result as Array<{ words: string }>).map(x => ({ ...x, words: fix(x.words) })) : []
+  const jsonOut = { ...json, words_result: wordsFixed }
+  const text = wordsFixed.map(x => x.words).join('\n')
   const parsed = parseText(text)
   const fields = Object.values(parsed).filter(Boolean).length
   const confidence = fields / 7
   
-  return NextResponse.json({ parsed, confidence, json})
+  return NextResponse.json({ parsed, confidence, json: jsonOut }, { headers: { 'content-type': 'application/json; charset=utf-8' } })
 }
