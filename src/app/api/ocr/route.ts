@@ -38,14 +38,17 @@ function toBase64(file: File): Promise<string> {
 }
 
 function parseText(text: string) {
-  const train = text.match(/\b([GDFZSTK]?\d{3,5})\b/)
+  const trainAlphaNum = text.match(/\b([A-Z][0-9]{1,4})\b/)
+  const trainNumeric = text.match(/\b([GDFZSTK]?\d{3,5})\b/)
+  const train = trainAlphaNum || trainNumeric
   const date1 = text.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/)
   const date2 = text.match(/(\d{1,2})月(\d{1,2})日/)
   const date = date1 ? `${date1[1]}-${date1[2].padStart(2,'0')}-${date1[3].padStart(2,'0')}` : (date2 ? `${new Date().getFullYear()}-${date2[1].padStart(2,'0')}-${date2[2].padStart(2,'0')}` : undefined)
-  const seat = (text.match(/(\d{1,2}车\d{1,2}[A-Z]?)(?:座)?/) || text.match(/(\d{1,2}厢\d{1,2}[A-Z]?)/) || [])[1]
-  const gate = (text.match(/检票口([A-Za-z0-9\-]+)/) || [])[1]
-  const depMatch = text.match(/从(.+?)出发/) || text.match(/自(.+?)始发/) || text.match(/由(.+?)开/)
-  const arrMatch = text.match(/到达(.+?)(?:。|，|,|\s|$)/) || text.match(/开往(.+?)(?:。|，|,|\s|$)/)
+  const seat = (text.match(/(\d{1,2}[车厢]\d{1,2}[A-Z]?)(?:座)?/) || [])[1]
+  let gate = (text.match(/检票口[:：]?\s*([A-Za-z0-9\-]+)/) || [])[1]
+  if (gate) gate = gate.replace(/[:：]$/, '')
+  const depMatch = text.match(/从(.+?)出发/) || text.match(/自(.+?)始发/) || text.match(/由(.+?)开/) || text.match(/(?:^|\n)\s*始\s*([^\n\)）]+)/)
+  const arrMatch = text.match(/到达(.+?)(?:。|，|,|\s|$)/) || text.match(/开往(.+?)(?:。|，|,|\s|$)/) || text.match(/(?:^|\n)\s*终\s*([^\n\)）]+)/)
   const depTimeHint = (text.match(/(\d{1,2}:\d{2}).{0,6}出发/) || [])[1]
   const arrTimeHint = (text.match(/(\d{1,2}:\d{2}).{0,6}到达/) || [])[1]
   const timeAll = Array.from(text.matchAll(/\b(\d{1,2}:\d{2})\b/g)).map(m => m[1])
@@ -56,8 +59,8 @@ function parseText(text: string) {
     start_date: date,
     seat_no: seat,
     gate,
-    from_station: depMatch?.[1]?.trim(),
-    to_station: arrMatch?.[1]?.trim(),
+    from_station: depMatch?.[1]?.trim().replace(/[\)）]+$/, ''),
+    to_station: arrMatch?.[1]?.trim().replace(/[\)）]+$/, ''),
     depart_time: depTime,
     arrive_time: arrTime,
   }
