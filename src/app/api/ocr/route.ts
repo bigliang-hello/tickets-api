@@ -42,12 +42,15 @@ function parseText(text: string) {
   const date1 = text.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/)
   const date2 = text.match(/(\d{1,2})月(\d{1,2})日/)
   const date = date1 ? `${date1[1]}-${date1[2].padStart(2,'0')}-${date1[3].padStart(2,'0')}` : (date2 ? `${new Date().getFullYear()}-${date2[1].padStart(2,'0')}-${date2[2].padStart(2,'0')}` : undefined)
-  const seat = (text.match(/(\d{1,2}车\d{1,2}[A-Z]?)(?:座)?/) || [])[1]
+  const seat = (text.match(/(\d{1,2}车\d{1,2}[A-Z]?)(?:座)?/) || text.match(/(\d{1,2}厢\d{1,2}[A-Z]?)/) || [])[1]
   const gate = (text.match(/检票口([A-Za-z0-9\-]+)/) || [])[1]
   const depMatch = text.match(/从(.+?)出发/) || text.match(/自(.+?)始发/) || text.match(/由(.+?)开/)
   const arrMatch = text.match(/到达(.+?)(?:。|，|,|\s|$)/) || text.match(/开往(.+?)(?:。|，|,|\s|$)/)
-  const depTime = (text.match(/(\d{1,2}:\d{2}).{0,6}出发/) || [])[1]
-  const arrTime = (text.match(/(\d{1,2}:\d{2}).{0,6}到达/) || [])[1]
+  const depTimeHint = (text.match(/(\d{1,2}:\d{2}).{0,6}出发/) || [])[1]
+  const arrTimeHint = (text.match(/(\d{1,2}:\d{2}).{0,6}到达/) || [])[1]
+  const timeAll = Array.from(text.matchAll(/\b(\d{1,2}:\d{2})\b/g)).map(m => m[1])
+  const depTime = depTimeHint || timeAll[0]
+  const arrTime = arrTimeHint || timeAll[timeAll.length - 1]
   return {
     train_code: train?.[1],
     start_date: date,
@@ -81,11 +84,23 @@ export async function POST(req: NextRequest) {
   const ocrUrl = new URL('https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic')
   ocrUrl.searchParams.set('access_token', token)
   const form = new URLSearchParams()
+  if (base64 && base64.startsWith('data:')) base64 = base64.split(',')[1]
   form.set('image', base64!)
+  form.set('language_type', 'CHN_ENG')
+  form.set('detect_direction', 'true')
   const res = await fetch(ocrUrl, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form.toString() })
   const json = await res.json()
   if (!json?.words_result) return NextResponse.json({ error: 'ocr error', detail: json }, { status: 502 })
-  const text = (json.words_result as Array<{ words: string }>).map(x => x.words).join('\n')
+  const fix = (s: string) => {
+    try {
+      const decoded = Buffer.from(s, 'latin1').toString('utf8')
+      const cjkDecoded = (decoded.match(/[\u4e00-\u9fa5]/g)?.length || 0)
+      const cjkOriginal = (s.match(/[\u4e00-\u9fa5]/g)?.length || 0)
+      if (cjkDecoded > cjkOriginal) return decoded
+    } catch {}
+    return s
+  }
+  const text = (json.words_result as Array<{ words: string }>).map(x => fix(x.words)).join('\n')
   const parsed = parseText(text)
   const fields = Object.values(parsed).filter(Boolean).length
   const confidence = fields / 7
