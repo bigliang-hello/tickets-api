@@ -89,5 +89,5 @@ export async function POST(req: NextRequest) {
   const parsed = parseText(text)
   const fields = Object.values(parsed).filter(Boolean).length
   const confidence = fields / 7
-  return NextResponse.json({ parsed, confidence})
+  return NextResponse.json({ parsed, confidence, json})
 }

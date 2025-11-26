@@ -28,22 +28,27 @@ export async function POST(req: NextRequest) {
     const { data: users } = await supabase.from('users_wechat').select('id, openid').eq('openid', openid).limit(1)
     let userId = users?.[0]?.id as string | undefined
     if (!userId) {
+      const nickname = body.nickname ?? `用户_${Math.random().toString(36).substring(2, 8)}`
+      const avatar_url = body.avatar_url ?? null
       const { data: inserted, error } = await supabase
         .from('users_wechat')
-        .insert({ openid, unionid, nickname: body.nickname ?? null, avatar_url: body.avatar_url ?? null })
+        .insert({ openid, unionid, nickname, avatar_url })
         .select('id')
         .limit(1)
       if (error) return NextResponse.json({ error: 'db insert error', detail: error.message }, { status: 500 })
       userId = inserted?.[0]?.id as string | undefined
     } else {
+      const updateData: any = { last_login_at: new Date().toISOString() }
+      if (body.nickname !== undefined) updateData.nickname = body.nickname
+      if (body.avatar_url !== undefined) updateData.avatar_url = body.avatar_url
       await supabase
         .from('users_wechat')
-        .update({ last_login_at: new Date().toISOString(), nickname: body.nickname ?? null, avatar_url: body.avatar_url ?? null })
+        .update(updateData)
         .eq('id', userId)
     }
-
+    const { data: userData } = await supabase.from('users_wechat').select('nickname, avatar_url').eq('id', userId).limit(1)
     const token = signJwt(userId!)
-    return NextResponse.json({ token, user: { id: userId, openid, unionid, nickname: body.nickname, avatar_url: body.avatar_url } })
+    return NextResponse.json({ token, user: { id: userId, openid, unionid, nickname: userData?.[0]?.nickname ?? null, avatar_url: userData?.[0]?.avatar_url ?? null } })
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : String(e)
     return NextResponse.json({ error: 'internal', detail: message }, { status: 500 })
