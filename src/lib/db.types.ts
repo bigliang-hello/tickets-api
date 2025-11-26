@@ -55,6 +55,7 @@ export interface Database {
           source_type: 'manual' | 'sms' | 'ocr'
           raw_sms: string | null
           raw_ocr_json: Json | null
+          note: string | null
           created_at: string | null
           updated_at: string | null
         }
@@ -74,6 +75,7 @@ export interface Database {
           source_type?: 'manual' | 'sms' | 'ocr'
           raw_sms?: string | null
           raw_ocr_json?: Json | null
+          note?: string | null
           created_at?: string | null
           updated_at?: string | null
         }

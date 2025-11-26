@@ -11,7 +11,8 @@ export const TicketCreateSchema = z.object({
   gate: z.string().optional(),
   carriage_no: z.string().optional(),
   price: z.number().optional(),
-  source_type: z.enum(['manual','sms','ocr']).default('manual'),
+  source_type: z.enum(['manual', 'sms', 'ocr']).default('manual'),
   raw_sms: z.string().optional(),
   raw_ocr_json: z.any().optional(),
+  note: z.string().optional(),
 })
